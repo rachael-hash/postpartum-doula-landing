@@ -15,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={inter.className}>
         {children}
+        {/* Pixel loads at the end of body; no interference with links/buttons */}
         <Pixel />
         <noscript
           dangerouslySetInnerHTML={{
