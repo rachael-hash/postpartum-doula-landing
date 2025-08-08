@@ -7,7 +7,6 @@ export default function TrackPageView() {
   const search = useSearchParams();
 
   useEffect(() => {
-    // Wait a tick to ensure fbevents.js is ready
     const t = setTimeout(() => {
       if (typeof window !== 'undefined' && (window as any).fbq) {
         (window as any).fbq('track', 'PageView');
