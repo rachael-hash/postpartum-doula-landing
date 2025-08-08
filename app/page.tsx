@@ -58,9 +58,12 @@ export default function Home() {
       ],
     })
 
-    // Stripe integration will go here
-    console.log("Processing payment...")
-  }
+      if (typeof window !== "undefined") {
+      window.location.href = "https://buy.stripe.com/14AbJ141S1ht8kX2mp67S00"
+      }
+
+   
+    }
 
   const handleEmailSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
