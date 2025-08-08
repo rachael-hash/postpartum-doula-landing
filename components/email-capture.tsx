@@ -24,7 +24,13 @@ export function EmailCapture({ emailSubmitted, handleEmailSignup, handlePurchase
     }
   }
 
+    // Lazily load the MailerLite CSS and scripts when the form is shown.
   useEffect(() => {
+    // If the form isn't visible yet, don't load the MailerLite assets. This
+    // prevents a large CSS block and external scripts from blocking the
+    // initial render and speeds up page load.
+    if (!showMailerLiteForm) return
+
     // Load MailerLite styles and scripts
     const styleSheet = document.createElement("style")
     styleSheet.type = "text/css"
@@ -261,7 +267,7 @@ export function EmailCapture({ emailSubmitted, handleEmailSignup, handlePurchase
         trackingScript.parentNode.removeChild(trackingScript)
       }
     }
-  }, [handleEmailSignup, safeTrackEvent])
+    }, [showMailerLiteForm, handleEmailSignup, safeTrackEvent])
 
   const handleShowForm = () => {
     setShowMailerLiteForm(true)
