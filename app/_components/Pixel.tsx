@@ -6,49 +6,54 @@ const PIXEL_ID = '2101939556996012';
 
 export default function Pixel() {
   useEffect(() => {
-    // Already loaded?
+    // Don’t double-inject
     if (document.querySelector('script[data-nmw-fb="1"]')) return;
 
-    // Guard: force our ID if something else tries another
-    (function () {
-      const TARGET = PIXEL_ID;
-      const q: any = (window as any).fbq = (window as any).fbq || function () {
-        (window as any).fbq.q = (window as any).fbq.q || [];
-        (window as any).fbq.q.push(arguments);
-      };
-      const orig = q;
-      (window as any).fbq = function () {
-        try {
-          if (arguments && arguments[0] === 'init') {
-            const id = String(arguments[1] || '');
-            if (id !== TARGET) return orig('init', TARGET);
-          }
-        } catch {}
-        return orig.apply(this, arguments as any);
-      };
-    })();
-
+    // Load fbq library
     const s = document.createElement('script');
     s.src = 'https://connect.facebook.net/en_US/fbevents.js';
     s.async = true;
     s.setAttribute('data-nmw-fb', '1');
     s.onload = () => {
       try {
+        // Init
         (window as any).fbq('init', PIXEL_ID);
-        // first PageView
-        setTimeout(() => (window as any).fbq('track', 'PageView'), 100);
-        // eslint-disable-next-line no-console
-        console.log('[Pixel] loaded & PageView sent');
+
+        // Primary send via fbq
+        setTimeout(() => {
+          try {
+            (window as any).fbq('track', 'PageView');
+          } catch {}
+        }, 150);
+
+        // Fallback beacon (fires even if fbq failed or got blocked)
+        setTimeout(() => {
+          const url =
+            'https://www.facebook.com/tr?id=' +
+            PIXEL_ID +
+            '&ev=PageView&noscript=1&cd[fallback]=1&v=2.9';
+          new Image().src = url;
+          // eslint-disable-next-line no-console
+          console.log('[Pixel] fbq PageView attempted; fallback beacon sent too');
+        }, 600);
       } catch (e) {
-        console.error('[Pixel] init error', e);
+        // If anything goes wrong, send beacon immediately
+        new Image().src =
+          'https://www.facebook.com/tr?id=' +
+          PIXEL_ID +
+          '&ev=PageView&noscript=1&cd[init_error]=1&v=2.9';
+        console.error('[Pixel] init error; used fallback', e);
       }
     };
-    s.onerror = (e) => console.error('[Pixel] load error', e);
-    document.body.appendChild(s);
-
-    return () => {
-      // no-op on unmount (SPA keeps it)
+    s.onerror = (e) => {
+      // If the script fails to load at all, still send via beacon
+      new Image().src =
+        'https://www.facebook.com/tr?id=' +
+        PIXEL_ID +
+        '&ev=PageView&noscript=1&cd[load_error]=1&v=2.9';
+      console.error('[Pixel] load error; used fallback', e);
     };
+    document.body.appendChild(s);
   }, []);
 
   return null;
